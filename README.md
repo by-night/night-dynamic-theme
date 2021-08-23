@@ -34,11 +34,11 @@ import { changeTheme } from 'night-dynamic-theme/utils';
 
 changeTheme('night'); // 参数为切换主题名称，不传，则从主题中随机选一个
 ```
-### 3. 其余配置
+#### 3. 其余配置
 ##### 可使用的方法
 `changeTheme`: 更换主题的方法（参数为主题方法，非必传）  
 `initTheme`: 初始化主题的方法（参数为主题方法，必传）
-#### 定义初始主题
+##### 定义初始主题
 在 .env 文件中定义初始主题，默认为 normal
 ```
 GLOBAL_THEME_NAME = 'normal'
