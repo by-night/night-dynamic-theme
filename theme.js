@@ -76,7 +76,7 @@ const getThemeFile = (themeDir) => {
     }
 }
 // 写入公共less文件
-const writeCommonLess = async (file) => {
+const writeCommonLess = (file) => {
     dirWriteSync(outputDir);
     const varFile = path.join(themeDir, file);
     const varContent = getLessVars(varFile);
@@ -88,11 +88,11 @@ const writeCommonLess = async (file) => {
         themeVariables: themeList,
     }
     const opt = { ...options, ...params };
-    await generateTheme(opt);
+    generateTheme(opt);
 }
 
 // 主方法
-const writeTheme = async () => {
+const writeTheme = () => {
     try {
         const themeFiles = getThemeFile(themeDir);
         if (!themeFiles || (themeFiles.length === 0)) return;
