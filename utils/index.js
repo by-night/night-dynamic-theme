@@ -1,8 +1,11 @@
+
 export const loadTheme = async (type, theme) => {
     if (window.localTheme) return;
     const theme_type = type || localStorage.getItem('THEME_NAME') || window.global.themeName;
     if (!theme) {
-        theme = require('../../../public/theme/theme.json')[type];
+        const modelpath = 'theme/theme.json';
+        const res = await import(`../../../public/${modelpath}`);
+        theme = res.default[type];
     }
     window.less.modifyVars(theme).then(() => {
         window.localStorage.setItem('THEME_NAME', theme_type);
@@ -12,14 +15,16 @@ export const loadTheme = async (type, theme) => {
 }
 
 // 切换主题
-export const changeTheme = (name) => {
+export const changeTheme = async (name) => {
     try {
         if (window.localTheme) return;
         let type = name;
         let themeContent = {};
         const themeName = localStorage.getItem('THEME_NAME') || window.global.themeName;
         if (!type) {
-            themeContent = require('../../../public/theme/theme.json');
+            const modelpath = 'theme/theme.json';
+            const res = await import(`../../../public/${modelpath}`);
+            themeContent = res.default;
             const themeList = Object.keys(themeContent).filter(v => v !== themeName);
             const index = Math.floor(Math.random() * themeList.length);
             type = themeList[index];
