@@ -6,18 +6,18 @@ const fsWrite = (url = '', callback) => {
     let index = fileExistsNum(pathList);
     function write() {
         index++;
-        if (index > 0) return;
-        if (index === 0) {
+        // if (index > 0) return;
+        if (index >= 0) {
             const filePath = pathList.join('\\');
             callback && callback(filePath);
         } else {
             const filePath = pathList.slice(0, index).join('\\');
             fs.mkdirSync(filePath);
+            write();
         }
-        write();
     }
     write();
-}
+};
 
 const fileExistsNum = (pathList = []) => {
     let index = 0;
@@ -34,7 +34,7 @@ const fileExistsNum = (pathList = []) => {
         return fn();
     }
     return fn();
-}
+};
 
 const fileWrite = (url = '', content = '', cb) => {
     const callback = (filePath) => {
@@ -45,27 +45,27 @@ const fileWrite = (url = '', content = '', cb) => {
             }
             cb && cb();
         });
-    }
+    };
     try {
         fsWrite(url, callback);
     } catch (e) {
         cb && cb(e);
     }
-}
+};
 
 const fileWriteSync = (url = '', content = '') => {
     const callback = (filePath) => {
         fs.writeFileSync(filePath, content);
-    }
+    };
     fsWrite(url, callback);
-}
+};
 
 const dirWrite = (url = '') => {
     const callback = (filePath) => {
         fs.mkdirSync(filePath);
-    }
+    };
     fsWrite(url, callback);
-}
+};
 
 const dirWriteSync = (url = '', cb) => {
     const callback = (filePath) => {
@@ -76,13 +76,13 @@ const dirWriteSync = (url = '', cb) => {
             }
             cb && cb();
         });
-    }
+    };
     try {
         fsWrite(url, callback);
     } catch (e) {
         cb && cb(e);
     }
-}
+};
 
 
 module.exports = {
@@ -90,4 +90,4 @@ module.exports = {
     fileWriteSync,
     dirWrite,
     dirWriteSync
-}
+};

@@ -1,45 +1,32 @@
 const fs = require('fs');
 const path = require('path');
 const root = process.cwd();
-const publicDir = path.join(root, 'public');
+let publicDir = path.join(root, 'public');
 let theme = 'normal';
 let lessCDN = false;
+let scriptPath = '';
+let lessPath = '';
 
 // 连接符_转驼峰
 const toTuo = (targetString) => {
     return targetString.replace(/\_(\w)/g, (match, letter) => letter.toUpperCase())
 };
-
-const getOutFile = (filePath) => {
-    return '/' + filePath;
-}
-// 加载less的js文件
-const getLessMin = (output = 'theme/less.min.js') => {
-    if (lessCDN) {
-        // less 使用 CDN 
-        return "https://cdn.bootcss.com/less.js/2.7.3/less.min.js";
-    }
-    const readStream = fs.createReadStream(path.join(__dirname, 'lib/less.min.js'), 'utf-8');
-    const writeStream = fs.createWriteStream(path.join(publicDir, 'theme/less.min.js'));
-    readStream.pipe(writeStream);
-    return getOutFile(output);
-}
 // 写入全局js文件
 const writeGlobal = (str = 'GLOBAL_') => {
-    let result = {
+    const result = {
         themeName: theme
     };
-    try {
-        for (let key in process.env) {
-            const ind = key.indexOf(str);
-            if (ind !== 0) continue;
-            const vars = key.slice(str.length);
-            const k = toTuo(vars.toLowerCase());
-            result[k] = process.env[key];
-        }
-    } catch (e) {
-        console.log(e);
-    }
+    // try {
+    //     for (let key in process.env) {
+    //         const ind = key.indexOf(str);
+    //         if (ind !== 0) continue;
+    //         const vars = key.slice(str.length);
+    //         const k = toTuo(vars.toLowerCase());
+    //         result[k] = process.env[key];
+    //     }
+    // } catch (e) {
+    //     console.log(e);
+    // }
     return `window.global=${JSON.stringify(result)}`;
 };
 
@@ -56,21 +43,54 @@ const writePublicTheme = () => {
     `;
 }
 const writeScript = (output = 'theme/loadTheme.js') => {
-    const result = writeGlobal() + ';' + writePublicTheme();
-    fs.writeFile(path.join(publicDir, output), result.replace(/\n/g, ''), (err) => {
-        if (err) {
-            console.log(err);
-            return;
+    return new Promise((resolve, reject) => {
+        const result = writeGlobal() + ';' + writePublicTheme();
+        fs.writeFile(path.join(publicDir, output), result.replace(/\n/g, ''), (err) => {
+            if (err) {
+                console.log(err);
+                reject(err);
+                return;
+            }
+            resolve();
+        })
+    })
+}
+// 加载less的js文件
+const getLessMin = (output = 'theme/less.min.js') => {
+    // 使用 CDN
+    if (lessCDN) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+        try {
+            const readStream = fs.createReadStream(path.join(__dirname, 'lib/less.min.js'), 'utf-8');
+            const writeStream = fs.createWriteStream(path.join(publicDir, 'theme/less.min.js'));
+            readStream.pipe(writeStream);
+            resolve()
+        } catch (e) {
+            reject(e);
         }
     })
-    return getOutFile(output);
-}
+};
+// 主方法
+const writeMain = (options) => {
+    try {
+        initGlobal(options);
+        // 在public创建js引用
+        const scriptAsync = writeScript(scriptPath);
+        const lessMinAsync = getLessMin(lessPath);
+
+        return Promise.all([scriptAsync, lessMinAsync]);
+    } catch (e) {
+        console.log(e);
+        return Promise.reject();
+    }
+};
 const initGlobal = (options) => {
+    publicDir = options.publicDir;
     theme = options.themeName;
     lessCDN = options.lessCDN;
-}
+    scriptPath = options.scriptPath;
+    lessPath = options.lessPath;
+};
 module.exports = {
-    getLessMin,
-    writeScript,
-    initGlobal,
-}
+    writeMain,
+};
